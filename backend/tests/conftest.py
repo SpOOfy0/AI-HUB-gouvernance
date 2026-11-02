@@ -23,7 +23,7 @@ os.environ.update({
 import psycopg  # noqa: E402
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import text  # noqa: E402
+from sqlalchemy import select, text  # noqa: E402
 from sqlalchemy.engine import make_url  # noqa: E402
 
 from alembic import command  # noqa: E402
@@ -92,6 +92,46 @@ def client():
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+class FakeProviders:
+    """Fabrique de fournisseurs pour les tests : enregistre chaque appel, peut simuler des pannes."""
+
+    def __init__(self) -> None:
+        self.calls: list[dict] = []
+        self.failing: set[str] = set()
+
+    def factory(self, model):
+        return self
+
+    def complete(self, model, messages):
+        from app.providers.base import ProviderError, ProviderResult
+
+        self.calls.append({"model": model.litellm_name, "hosting": model.hosting, "messages": messages})
+        if model.litellm_name in self.failing:
+            raise ProviderError("panne simulée")
+        return ProviderResult("Réponse de test.", 100, 50, False, True, "fake")
+
+
+@pytest.fixture
+def providers(client):
+    """Remplace la fabrique de fournisseurs de l'application par un faux qui compte les appels."""
+    from app.main import app
+    from app.providers.factory import get_provider_factory
+
+    fake = FakeProviders()
+    app.dependency_overrides[get_provider_factory] = lambda: fake.factory
+    return fake
+
+
+def chat(client: TestClient, message: str, **kwargs):
+    return client.post("/api/chat/completions", json={"message": message, **kwargs})
+
+
+def model_id(db, litellm_name: str) -> int:
+    from app.models import LlmModel
+
+    return db.scalar(select(LlmModel.id).where(LlmModel.litellm_name == litellm_name))
 
 
 def login(client: TestClient, role: str = "USER") -> None:

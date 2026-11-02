@@ -23,6 +23,9 @@ class LiteLLMProvider:
     def complete(self, model: LlmModel, messages: list[dict]) -> ProviderResult:
         import litellm  # import tardif : la bibliothèque est lourde à charger
 
+        litellm.suppress_debug_info = True  # pas de messages d'aide (ni d'extraits de requête) dans les logs
+        litellm.telemetry = False
+
         try:
             response = litellm.completion(
                 model=model.litellm_name,

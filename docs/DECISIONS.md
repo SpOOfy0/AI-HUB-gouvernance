@@ -54,3 +54,39 @@ assumée comme un choix de prototype, à réévaluer pour la production.
 - **Contexte** : derrière un proxy TLS de DSI, `pip` et `npm` refusent le certificat.
 - **Décision** : secret de build BuildKit optionnel `corporate_ca`, fourni par un `docker-compose.override.yml` local (exemple versionné).
 - **Conséquences** : le certificat n'est jamais copié dans l'image et le Dockerfile reste identique avec ou sans proxy.
+
+## D10. Règles de décision codées, paramètres configurables
+- **Contexte** : la politique doit être modifiable par un ADMIN, sans permettre de casser la sécurité par erreur.
+- **Décision** : les trois règles (RESTRICTED → BLOCK, CONFIDENTIAL → PRIVATE_ONLY, sinon ALLOW selon le niveau max du modèle) sont codées dans `policy_service` et testées. Sont configurables en base : le mapping détection → niveau, le lexique, les seuils de complexité, la rétention et les seuils d'alerte. Les catégories `secret` et `payment_card` restent figées à RESTRICTED.
+- **Écartées** : un moteur de règles entièrement paramétrable (OPA/Rego, règles JSON).
+- **Conséquences** : un administrateur ne peut pas faire sortir un secret par une mauvaise configuration. Toute modification est journalisée avec l'ancienne et la nouvelle valeur.
+
+## D11. Fail closed à chaque étape
+- **Contexte** : un détecteur peut planter (regex invalide saisie par un admin, bug).
+- **Décision** : détecteur en erreur → détection fictive au niveau maximal que ce détecteur peut attribuer. Erreur de classification globale → RESTRICTED (blocage). Regex de lexique invalide → au moins CONFIDENTIAL.
+- **Conséquences** : une panne produit un excès de prudence (blocage, routage privé), jamais une fuite. Les erreurs sont visibles dans les logs.
+
+## D12. Classification : maximum de quatre sources, niveau de conversation monotone
+- **Contexte** : un message anodin peut suivre un message confidentiel ; tout l'historique est envoyé au modèle.
+- **Décision** : niveau = max(message, contexte complet, niveau déclaré, niveau déjà atteint par la conversation). `conversations.max_classification` ne redescend jamais. Un message bloqué n'est pas stocké, donc il ne fait pas partie du contexte et ne relève pas le niveau de la conversation.
+- **Conséquences** : une conversation devenue CONFIDENTIAL reste sur les modèles privés. L'utilisateur peut ouvrir une nouvelle conversation pour revenir aux modèles externes.
+
+## D13. Quota : estimation pessimiste avant appel, coût réel après
+- **Contexte** : le modèle n'est pas encore connu au moment du contrôle (la classification vient après, conformément au pipeline).
+- **Décision** : estimation = tokens du contexte + 800 tokens de sortie, au prix du modèle le plus cher autorisé pour le rôle. Refus si consommation + estimation dépasse 100 % (utilisateur ou département). Après l'appel, la consommation réelle (somme de `llm_requests`) déclenche les alertes 70/90/100 %, une seule fois par seuil et par mois (table `quota_alerts`).
+- **Écartées** : réservation de budget transactionnelle.
+- **Conséquences** : on peut refuser une requête un peu avant 100 %. Deux requêtes simultanées peuvent passer ensemble le contrôle (dépassement borné à une requête). En production : réservation puis ajustement, ou verrou par utilisateur.
+
+## D14. Traitement des requêtes refusées
+- **Contexte** : une requête bloquée contient par définition une donnée qu'on ne veut stocker nulle part.
+- **Décision** : BLOCK → réponse 200 avec `status=BLOCKED` et le panneau de routage (types détectés, jamais les valeurs). Rien n'est écrit en dehors des métadonnées (`llm_requests`, `audit_events`), aucune conversation n'est créée. Un modèle manuel non éligible → `status=REFUSED` avec le motif et la possibilité de basculer vers un modèle privé (jamais d'envoi forcé).
+- **Conséquences** : l'interface affiche une explication claire. Un test vérifie l'absence du contenu dans toutes les tables, les logs capturés et la réponse.
+
+## D15. Fallback limité à l'ensemble éligible, invariant revérifié avant chaque appel
+- **Contexte** : le fallback ne doit jamais franchir une frontière de confidentialité.
+- **Décision** : la liste de candidats est calculée une seule fois à partir des modèles éligibles. Avant chaque appel, `is_model_allowed_for_level` est revérifié (défense en profondeur : une violation lève une exception plutôt que d'envoyer). Si tous les candidats échouent : 503 et événement `NO_MODEL_AVAILABLE`.
+- **Conséquences** : une panne d'Ollama sur une requête CONFIDENTIAL donne une erreur 503, pas un envoi vers GPT. C'est voulu.
+
+## D16. Limitation de débit en mémoire
+- **Décision** : fenêtre glissante d'une minute par IP (login) et par utilisateur (chat), dans le processus.
+- **Conséquences** : simple et testable, mais non partagée entre plusieurs instances. En production : Redis ou reverse proxy (NGINX, API Gateway).

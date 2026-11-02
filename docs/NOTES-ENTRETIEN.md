@@ -18,3 +18,20 @@ Via l'interface `AuthProvider` : flux OIDC authorization code + PKCE, validation
 
 **Les données de démo sont-elles réalistes ?**
 Elles sont fictives et générées avec une graine fixe : ~3 000 requêtes sur 30 jours, jours ouvrés plus chargés, routage cohérent avec la politique (le seed réutilise les fonctions du routeur). Les prix sont fictifs et marqués comme tels. Les volumes et les coûts ne valent pas une étude de marché.
+
+## Phase 2 : cœur de la passerelle
+
+**Pourquoi des expressions régulières plutôt que Presidio ou un LLM classifieur ?**
+Les regex sont déterministes, rapides, explicables et testables, et les contrôles algorithmiques (Luhn, clé IBAN, clé NIR) réduisent les faux positifs. Leurs limites sont réelles et testées : reformulation, encodage base64, clients absents du lexique. En production, j'ajouterais Microsoft Presidio (NER multilingue) et éventuellement un classifieur LLM exécuté uniquement sur le modèle local, jamais chez un fournisseur externe.
+
+**Comment êtes-vous sûr qu'une requête CONFIDENTIAL ne part jamais chez OpenAI ?**
+Trois niveaux de défense : (1) `eligible_models` ne garde que les modèles PRIVATE ; (2) le fallback ne parcourt que cette liste ; (3) juste avant chaque appel, l'invariant est revérifié et une exception est levée en cas de violation. Les tests utilisent un faux fournisseur qui enregistre chaque appel avec l'hébergement du modèle : on vérifie qu'aucun appel EXTERNAL n'a eu lieu, y compris en mode manuel et quand tous les modèles privés tombent en panne.
+
+**Que se passe-t-il si la DLP rate un secret ?**
+Le secret part vers un modèle autorisé pour le niveau détecté. Pour une requête classée PUBLIC, cela peut être DeepSeek. C'est la limite principale : la DLP réduit le risque, elle ne l'élimine pas. Les mesures complémentaires sont la formation, les contrats fournisseurs (pas d'entraînement, rétention courte), un modèle local par défaut pour les services sensibles, et la détection de secrets dans le code (gitleaks) en amont.
+
+**Pourquoi le contrôle de quota est-il fait avant la classification, avec une estimation ?**
+C'est l'ordre demandé : on refuse au plus tôt, sans même analyser le contenu. L'estimation est pessimiste (modèle le plus cher autorisé pour le rôle, 800 tokens de sortie). Limite : deux requêtes simultanées peuvent passer ensemble. En production, on réserverait le budget avant l'appel puis on ajusterait.
+
+**Le journal d'audit est-il vraiment infalsifiable ?**
+Pas absolument. Le trigger empêche UPDATE, DELETE et TRUNCATE pour l'application. Un superutilisateur PostgreSQL peut le désactiver, mais le chaînage par hash rend toute modification ou suppression détectable (testé). Pour aller plus loin : rôle applicatif sans droits DDL, export régulier du dernier hash vers un stockage WORM ou un SIEM, pour qu'une réécriture complète de la chaîne soit elle aussi détectable.

@@ -11,6 +11,7 @@ import argparse
 import logging
 import random
 import uuid
+from functools import lru_cache
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -44,6 +45,12 @@ TARGET_REQUESTS = 2850  # + ~150 requêtes de scénarios de quota ≈ 3 000
 DAYS = 30
 
 
+@lru_cache
+def _hash(password: str) -> str:
+    """argon2 est volontairement lent : on ne hache qu'une fois chaque mot de passe de démo."""
+    return hash_password(password)
+
+
 # ---------------------------------------------------------------------------
 # Données de référence (aussi utilisées par les tests)
 # ---------------------------------------------------------------------------
@@ -57,7 +64,7 @@ def seed_reference(db: Session) -> None:
     db.flush()
 
     for acc in data.DEMO_ACCOUNTS:
-        db.add(User(email=acc["email"], full_name=acc["full_name"], password_hash=hash_password(acc["password"]),
+        db.add(User(email=acc["email"], full_name=acc["full_name"], password_hash=_hash(acc["password"]),
                     role=acc["role"], department_id=depts[acc["department"]].id,
                     monthly_budget_eur=Decimal(acc["budget"])))
 
@@ -107,7 +114,7 @@ def _detections(rng: random.Random, level: Level) -> list[dict]:
 def _extra_users(db: Session, rng: random.Random) -> None:
     depts = list(db.scalars(select(Department)))
     by_name = {d.name: d for d in depts}
-    pw = hash_password("Pilote!2026")  # comptes pilotes fictifs, non affichés
+    pw = _hash("Pilote!2026")  # comptes pilotes fictifs, non affichés
     managed = {"Transport maritime"}  # déjà un manager démo
     names = list(zip(data.FIRST_NAMES, data.LAST_NAMES, strict=True))
     for i, (first, last) in enumerate(names):

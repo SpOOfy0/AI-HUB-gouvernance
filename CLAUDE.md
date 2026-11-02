@@ -10,7 +10,7 @@ Destiné à une présentation en entretien technique : le code doit rester simpl
 ## État d'avancement
 - Phase 0 : plan validé.
 - Phase 1 (socle) : FAIT. Docker, PostgreSQL, Alembic, modèles, seed, auth JWT cookie, rôles, layout.
-- Phase 2 (cœur passerelle) : voir git log.
+- Phase 2 (cœur passerelle) : FAIT. DLP, classification, politique, routeur, fallback, coûts, quotas, audit. 97 tests.
 - Phase 3 (playground, sécurité, audit) : voir git log.
 - Phases 4-5 : non commencées (dashboard, coûts, modèles, utilisateurs, Developer Guard, P2).
 
