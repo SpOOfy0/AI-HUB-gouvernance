@@ -11,9 +11,9 @@ import argparse
 import logging
 import random
 import uuid
-from functools import lru_cache
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import lru_cache
 
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
@@ -279,10 +279,11 @@ def _quota_scenarios(db: Session, rng: random.Random, now: datetime, models: lis
         user = db.scalar(select(User).where(User.email == email))
         target = (user.monthly_budget_eur * pct).quantize(Decimal("0.000001"))
         _fill_month(db, rng, user, haiku, target, now, events)
-        for threshold in (70, 90, 100):
+        for i, threshold in enumerate((70, 90, 100)):
             if pct * 100 >= threshold:
                 db.add(QuotaAlert(scope="user", scope_id=user.id, period=period, threshold=threshold))
-                events.append((now - timedelta(minutes=rng.randint(5, 600)), dict(
+                # Seuils franchis dans l'ordre chronologique (70 % puis 90 % puis 100 %).
+                events.append((now - timedelta(minutes=rng.randint(5, 60) + (2 - i) * 120), dict(
                     event_type="QUOTA_THRESHOLD", category="quota",
                     severity=Severity.CRITICAL if threshold == 100 else Severity.WARNING, status="ALERT",
                     user_id=user.id, details={"scope": "user", "scope_id": user.id, "threshold": threshold,

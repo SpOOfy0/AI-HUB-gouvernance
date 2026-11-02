@@ -4,6 +4,7 @@ Réponse courte plausible préfixée par "[Réponse simulée]", latence aléatoi
 Aucun appel réseau.
 """
 import random
+import re
 import time
 
 from app.config import get_settings
@@ -32,6 +33,9 @@ _CANNED = [
     (("conteneur", "container", "evp", "teu"),
      "Un numéro de conteneur ISO 6346 comporte 4 lettres (code propriétaire + catégorie), 6 chiffres et un chiffre "
      "de contrôle. Un 40' représente 2 EVP."),
+    (("tarif", "tarifs", "cotation", "fret", "armateur"),
+     "Pour analyser une cotation fret, comparez le taux de base (BAS), les surcharges (BAF, CAF, THC), les "
+     "franchises de surestaries et la validité de l'offre. Un tableau par armateur et par ligne facilite la comparaison."),
     (("procedure", "dossier"),
      "Synthèse proposée : 1) ouverture du dossier et vérification des documents, 2) réservation auprès du "
      "transporteur, 3) préparation des documents douaniers, 4) suivi jusqu'à la livraison."),
@@ -53,7 +57,8 @@ class MockProvider:
         time.sleep(delay_ms / 1000)
 
         last_user = normalize(next((m["content"] for m in reversed(messages) if m["role"] == "user"), ""))
-        body = next((text for keys, text in _CANNED if any(k in last_user for k in keys)), _DEFAULT)
+        body = next((text for keys, text in _CANNED if any(re.search(rf"\b{re.escape(k)}\b", last_user) for k in keys)),
+                    _DEFAULT)
         where = "modèle privé simulé (Ollama non joignable)" if self.private else f"{model.display_name} simulé"
         text = f"[Réponse simulée - {where}] {body}"
         prompt_chars = sum(len(m["content"]) for m in messages)

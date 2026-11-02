@@ -35,3 +35,20 @@ C'est l'ordre demandé : on refuse au plus tôt, sans même analyser le contenu.
 
 **Le journal d'audit est-il vraiment infalsifiable ?**
 Pas absolument. Le trigger empêche UPDATE, DELETE et TRUNCATE pour l'application. Un superutilisateur PostgreSQL peut le désactiver, mais le chaînage par hash rend toute modification ou suppression détectable (testé). Pour aller plus loin : rôle applicatif sans droits DDL, export régulier du dernier hash vers un stockage WORM ou un SIEM, pour qu'une réécriture complète de la chaîne soit elle aussi détectable.
+
+## Phase 3 : interfaces du cœur
+
+**Que voit l'utilisateur quand sa requête est bloquée ?**
+Une carte rouge qui donne le type de donnée détectée (« clé API »), précise que rien n'a été transmis ni conservé et qu'un événement de sécurité a été créé. Son message est masqué à l'écran. Il ne voit jamais la valeur détectée : l'API ne la renvoie pas, puisque la DLP ne la stocke pas.
+
+**Comment un administrateur ajuste-t-il la politique sans développeur ?**
+Dans Sécurité → Politique (mapping, seuils, rétention, alertes) et Lexique métier (termes ou regex). Le bac à sable « Tester la classification » montre la décision et les modèles éligibles sans appeler de modèle. Chaque modification crée un événement `CONFIG_CHANGED` avec l'ancienne et la nouvelle valeur. Les secrets et cartes bancaires restent figés à RESTRICTED.
+
+**Comment prouvez-vous en démo que le journal n'a pas été altéré ?**
+Le bouton « Vérifier l'intégrité du journal » recalcule toute la chaîne SHA-256 (environ 4 000 événements en moins d'une seconde) et indique le premier événement incohérent s'il y en a un. La vérification est elle-même journalisée. Une altération directe en base est démontrée par un test automatisé, qui désactive le trigger en superutilisateur.
+
+**Pourquoi le niveau d'une conversation ne redescend-il jamais ?**
+Tout l'historique est envoyé au modèle à chaque tour. Si un message confidentiel est dans l'historique, un message anodin qui suit transporterait quand même ce contexte vers un modèle externe. La solution pour l'utilisateur est d'ouvrir une nouvelle conversation, et le bandeau le lui indique.
+
+**Qu'est-ce qui est simulé dans ce que je vois ?**
+Uniquement le texte des réponses (badge « simulé », préfixe « [Réponse simulée] ») et les tokens associés (marqués « estimé »). Les prix sont fictifs (« prix fictif »). La classification, le routage, le fallback, les quotas, les coûts calculés et l'audit sont réellement exécutés.

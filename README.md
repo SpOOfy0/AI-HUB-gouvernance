@@ -25,4 +25,15 @@ La classification, le routage, les quotas, les coûts et l'audit s'exécutent r�
 - [docs/NOTES-ENTRETIEN.md](docs/NOTES-ENTRETIEN.md) : questions et réponses
 - `CLAUDE.md` : contexte et commandes de développement
 
+## État du prototype
+
+| Module | État |
+|---|---|
+| Socle (Docker, PostgreSQL, Alembic, auth, rôles, layout) | Fait |
+| Passerelle : DLP, classification, politique, routage, fallback, coûts, quotas | Fait, 97 tests |
+| Journal d'audit append-only chaîné par hash + vérification | Fait |
+| Playground avec panneau de routage | Fait |
+| Sécurité : événements, bac à sable, politique, lexique | Fait |
+| Dashboard, coûts, modèles, utilisateurs, Developer Guard | Phases 4-5 (à venir) |
+
 *(README complet : phase 5.)*

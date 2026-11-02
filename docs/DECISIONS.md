@@ -90,3 +90,11 @@ assumée comme un choix de prototype, à réévaluer pour la production.
 ## D16. Limitation de débit en mémoire
 - **Décision** : fenêtre glissante d'une minute par IP (login) et par utilisateur (chat), dans le processus.
 - **Conséquences** : simple et testable, mais non partagée entre plusieurs instances. En production : Redis ou reverse proxy (NGINX, API Gateway).
+
+## D17. Playground : transparence du routage, message bloqué masqué à l'écran
+- **Contexte** : l'utilisateur doit comprendre pourquoi sa requête a été routée ou bloquée, sans que l'interface réaffiche une donnée sensible.
+- **Décision** : sous chaque réponse, un panneau de routage montre la classification, les quatre sources, les types détectés, la décision, le modèle, la latence, les tokens (marqués « estimé » si besoin), le coût (ou « coût non disponible ») et un badge « simulé ». Si la requête est bloquée, le message saisi est remplacé à l'écran par « contenu masqué ». En cas de refus d'un modèle manuel, un bouton propose explicitement la bascule vers un modèle privé.
+- **Conséquences** : une démonstration lisible pour un DSI. Le panneau est reconstruit à partir des métadonnées stockées avec le message (`messages.routing`), jamais à partir du contenu.
+
+## D18. Gardes de rôle côté frontend = confort uniquement
+- **Décision** : `RoleGuard` et la navigation filtrée évitent d'afficher des pages inutiles, et les appels API d'une page protégée ne partent que si le rôle est autorisé. La sécurité reste dans les dépendances FastAPI (403 testés sur toutes les routes d'administration).
