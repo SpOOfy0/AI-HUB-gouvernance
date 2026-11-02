@@ -312,9 +312,10 @@ export default function PlaygroundPage() {
                 <Select value={modelId} onChange={(e) => setModelId(e.target.value)}>
                   <option value="auto">Auto (recommandé)</option>
                   {models.map((m) => (
-                    <option key={m.id} value={m.id}>
+                    <option key={m.id} value={m.id} disabled={!m.available}>
                       {m.display_name} · {m.hosting === "PRIVATE" ? "privé" : "externe"} · max {m.max_classification}
                       {m.simulated ? " · simulé" : ""}
+                      {!m.available ? " · non configuré" : ""}
                     </option>
                   ))}
                 </Select>

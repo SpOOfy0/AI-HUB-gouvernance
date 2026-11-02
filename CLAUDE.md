@@ -12,6 +12,7 @@ Destiné à une présentation en entretien technique : le code doit rester simpl
 - Phase 1 (socle) : FAIT. Docker, PostgreSQL, Alembic, modèles, seed, auth JWT cookie, rôles, layout.
 - Phase 2 (cœur passerelle) : FAIT. DLP, classification, politique, routeur, fallback, coûts, quotas, audit. 97 tests.
 - Phase 3 (interfaces du cœur) : FAIT. Playground + panneau de routage, Sécurité (événements, bac à sable, politique, lexique), Audit (filtres, intégrité).
+- Prêt pour le déploiement : mode réel (DEMO_MODE=false), image unique `Dockerfile` racine, `render.yaml`, docs/DEPLOIEMENT.md, SECURITY.md. 111 tests.
 - Phases 4-5 : non commencées (dashboard, coûts, modèles, utilisateurs, Developer Guard, P2).
 
 ## Commandes
@@ -31,10 +32,17 @@ Frontend : http://localhost:3000 · API/Swagger : http://localhost:8000/docs
   `model_router`, `cost_service`, `quota_service`, `audit_service`.
 - `backend/app/providers/` : interface `complete()`, `MockProvider`, `LiteLLMProvider`, fabrique.
 - Frontend Next.js (App Router) : `/api/*` relayé vers FastAPI (même origine, cookie httpOnly).
+- Deux modes de déploiement : `docker-compose.yml` (dev, 2 services) et `Dockerfile` racine (hébergeur :
+  FastAPI sert l'export statique Next via STATIC_DIR). Ne pas utiliser de fonctionnalité serveur Next
+  (rewrites, redirect serveur, route handlers) : l'export statique ne les supporte pas.
+- Éligibilité (politique) ≠ disponibilité (clé configurée, Ollama joignable) : `providers/factory.is_model_available`.
 
 ## Vérification visuelle
 Playwright est préinstallé dans la sandbox : scripts de capture d'écran possibles contre http://localhost:3000.
 Attention : `scrollIntoView` renvoie une Promise dans Chrome récent, ne jamais la retourner depuis un `useEffect`.
+
+## Dépendances
+Audit : `pip-audit -r backend/requirements.txt` et `npm audit --omit=dev`. `test_litellm_provider.py` vérifie un vrai appel LiteLLM.
 
 ## Conventions
 - Code et commentaires en français, simples. Pas d'abstraction sans usage réel.

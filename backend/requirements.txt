@@ -1,14 +1,15 @@
 # Dépendances backend : versions épinglées (reproductibilité).
-fastapi==0.115.12
-uvicorn[standard]==0.34.2
-sqlalchemy==2.0.40
-alembic==1.15.2
-psycopg[binary]==3.2.6
-pydantic==2.11.4
-pydantic-settings==2.9.1
-email-validator==2.2.0
-argon2-cffi==23.1.0
-pyjwt==2.10.1
+# Mises à jour en novembre 2026 après audit `pip-audit` (vulnérabilités connues dans les versions précédentes).
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+sqlalchemy==2.0.55
+alembic==1.20.1
+psycopg[binary]==3.3.6
+pydantic==2.14.2
+pydantic-settings==2.16.2
+email-validator==2.3.0
+argon2-cffi==25.1.0
+pyjwt==2.15.1
 httpx==0.28.1
 # LiteLLM utilisé comme bibliothèque (SDK), pas comme proxy. Voir docs/DECISIONS.md.
-litellm==1.67.4
+litellm==1.106.6

@@ -7,3 +7,4 @@ node_modules/
 .next/
 docker-compose.override.yml
 .local/
+frontend/out/

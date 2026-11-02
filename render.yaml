@@ -1,0 +1,25 @@
+# Render Blueprint : déploiement en un clic depuis GitHub (Dashboard > New > Blueprint).
+# Un seul service web gratuit (API + interface), base PostgreSQL externe (Neon, gratuite).
+# Guide pas à pas : docs/DEPLOIEMENT.md
+services:
+  - type: web
+    name: rdt-ai-hub
+    runtime: docker
+    plan: free
+    region: frankfurt          # données hébergées dans l'UE
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL      # chaîne de connexion Neon (demandée à la création)
+        sync: false
+      - key: DEMO_MODE         # true = démo publique ; false = mode réel (voir le guide)
+        value: "true"
+      - key: JWT_SECRET        # généré aléatoirement par Render
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: FORWARDED_ALLOW_IPS   # le proxy de Render transmet l'IP du client
+        value: "*"
+      - key: PROVIDER_TIMEOUT_SECONDS
+        value: "60"

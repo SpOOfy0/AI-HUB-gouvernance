@@ -52,3 +52,17 @@ Tout l'historique est envoyé au modèle à chaque tour. Si un message confident
 
 **Qu'est-ce qui est simulé dans ce que je vois ?**
 Uniquement le texte des réponses (badge « simulé », préfixe « [Réponse simulée] ») et les tokens associés (marqués « estimé »). Les prix sont fictifs (« prix fictif »). La classification, le routage, le fallback, les quotas, les coûts calculés et l'audit sont réellement exécutés.
+
+## Mise en production (hébergement de démonstration)
+
+**Comment l'avez-vous déployée ?**
+Une seule image Docker (FastAPI sert l'API et l'interface Next.js exportée en statique) sur Render en offre gratuite, région Frankfurt, avec une base PostgreSQL Neon en UE. Un fichier `render.yaml` décrit le déploiement. C'est un hébergement de démonstration : mise en veille, pas de sauvegarde garantie, pas de GPU.
+
+**Que se passe-t-il si une clé API manque en production ?**
+La politique ne change pas. Le modèle éligible mais non configuré est simplement ignoré. S'il ne reste aucun modèle, l'utilisateur reçoit une erreur claire indiquant le niveau concerné, et l'événement est journalisé. Hors démo, il n'y a jamais de réponse simulée.
+
+**Comment avez-vous validé l'application avant de la déployer ?**
+111 tests automatisés, audit des dépendances (pip-audit, npm audit, avec mises à jour), test de charge (40 requêtes simultanées, chaîne d'audit sans fourche), recherche des secrets envoyés dans un dump complet de la base et dans les logs (zéro occurrence), parcours complets dans un navigateur sur l'image de production, et appel réel à l'API Gemini (la clé de test a été refusée par Google, ce qui prouve que l'appel part correctement). Ce processus a révélé un vrai défaut : la version de LiteLLM épinglée au départ ne s'importait pas. Je l'ai corrigé et j'ai ajouté le test qui l'aurait détecté.
+
+**Que faudrait-il pour une vraie production au sein du groupe ?**
+Hébergement interne ou cloud sous contrat avec sauvegardes, serveur GPU pour les modèles privés, SSO Entra ID, contrats fournisseurs validés par le DPO, gestion des utilisateurs (phase 4), supervision (SIEM pour le journal, alertes), et une DLP renforcée (Presidio).

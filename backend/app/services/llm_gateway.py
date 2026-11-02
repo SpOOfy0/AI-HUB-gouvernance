@@ -28,6 +28,7 @@ from app.config import get_settings
 from app.core.enums import App, Decision, Level, Severity
 from app.models import Conversation, LlmModel, LlmRequest, Message, User
 from app.providers.base import ProviderFactory
+from app.providers.factory import is_model_available
 from app.services import (
     audit_service,
     classification_service,
@@ -192,6 +193,10 @@ def handle_chat(db: Session, user: User, inp: ChatInput, provider_factory: Provi
         # Défense en profondeur : on revérifie l'invariant juste avant l'envoi.
         if not policy_service.is_model_allowed_for_level(model, result.level):
             raise InvariantViolation(f"Modèle {model.litellm_name} non éligible pour {result.level}")
+        # Modèle éligible mais non configuré (pas de clé API, Ollama absent) : ignoré sans appel.
+        if not is_model_available(model):
+            attempts.append({"model": model.litellm_name, "error": "NotConfigured"})
+            continue
         started = time.perf_counter()
         try:
             provider_result = provider_factory(model).complete(model, context_messages)
@@ -212,10 +217,17 @@ def handle_chat(db: Session, user: User, inp: ChatInput, provider_factory: Provi
         _record_request(db, user, inp, request_id, conversation_id=conversation.id if conversation else None,
                         classification=str(result.level), detections=detections_meta, decision=str(decision),
                         routing_reason=reason, complexity=complexity.level, status="ERROR", fallback_used=True)
+        not_configured = all(a["error"] == "NotConfigured" for a in attempts)
         audit_service.log_event(db, "NO_MODEL_AVAILABLE", category="security", severity=Severity.CRITICAL,
                                 status="ERROR", user_id=user.id, request_id=request_id,
-                                details={"classification": str(result.level), "attempts": attempts})
+                                details={"classification": str(result.level), "attempts": attempts,
+                                         "cause": "fournisseurs non configurés" if not_configured else "pannes"})
         db.commit()
+        if not_configured:
+            raise GatewayError(503, "NO_CONFIGURED_PROVIDER",
+                               f"Aucun modèle autorisé pour le niveau {result.level} n'est configuré sur cette instance "
+                               "(clé API manquante ou modèle privé indisponible). La requête n'a été envoyée nulle part.",
+                               request_id)
         raise GatewayError(503, "ALL_PROVIDERS_FAILED",
                            "Aucun modèle éligible n'a pu répondre. Réessayez plus tard.", request_id)
 

@@ -51,6 +51,7 @@ export interface AvailableModel {
   max_classification: Level;
   tier: string;
   simulated: boolean;
+  available: boolean;
   price: { input_per_mtok: string; output_per_mtok: string; is_demo: boolean } | null;
 }
 

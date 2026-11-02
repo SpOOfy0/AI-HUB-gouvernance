@@ -18,6 +18,7 @@ from functools import lru_cache
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.core.enums import Level, Severity
 from app.core.security import hash_password
 from app.db import SessionLocal, engine
@@ -54,7 +55,7 @@ def _hash(password: str) -> str:
 # ---------------------------------------------------------------------------
 # Données de référence (aussi utilisées par les tests)
 # ---------------------------------------------------------------------------
-def seed_reference(db: Session) -> None:
+def seed_reference(db: Session, demo_accounts: bool = True) -> None:
     depts = {}
     for name, budget, tokens, cap in data.DEPARTMENTS:
         d = Department(name=name, monthly_budget_eur=Decimal(budget), monthly_token_limit=tokens,
@@ -63,7 +64,7 @@ def seed_reference(db: Session) -> None:
         depts[name] = d
     db.flush()
 
-    for acc in data.DEMO_ACCOUNTS:
+    for acc in data.DEMO_ACCOUNTS if demo_accounts else []:
         db.add(User(email=acc["email"], full_name=acc["full_name"], password_hash=_hash(acc["password"]),
                     role=acc["role"], department_id=depts[acc["department"]].id,
                     monthly_budget_eur=Decimal(acc["budget"])))
@@ -81,8 +82,11 @@ def seed_reference(db: Session) -> None:
         db.add(m)
         db.flush()
         if pin is not None:
+            free = pin == 0 and pout == 0
             db.add(ModelPrice(model_id=m.id, input_per_mtok=Decimal(str(pin)), output_per_mtok=Decimal(str(pout)),
-                              currency="EUR", source="Prix fictifs de démonstration", is_demo=True))
+                              currency="EUR",
+                              source="Offre gratuite (limites de débit)" if free else "Prix fictifs de démonstration",
+                              is_demo=not free))
 
     for key, value in DEFAULT_POLICY.items():
         db.add(PolicySetting(key=key, value=value))
@@ -314,6 +318,48 @@ def _sample_conversations(db: Session, now: datetime) -> None:
     db.flush()
 
 
+DEMO_DOMAIN = "@rdt-demo.local"
+
+
+def bootstrap_production(db: Session, admin_email: str, admin_password: str) -> None:
+    """Mode réel : configuration de référence + un administrateur. Aucune donnée fictive d'activité,
+    aucun compte de démonstration."""
+    _check_admin_credentials(admin_email, admin_password)
+    seed_reference(db, demo_accounts=False)
+    audit_service.log_event(db, "ADMIN_ACTION", category="admin", details={"action": "bootstrap_production"})
+    ensure_admin(db, admin_email, admin_password)
+
+
+def _check_admin_credentials(admin_email: str, admin_password: str) -> None:
+    if not admin_email or "@" not in admin_email or len(admin_password) < 12:
+        raise SystemExit("Mode réel : définir ADMIN_EMAIL et ADMIN_PASSWORD (12 caractères minimum).")
+
+
+def ensure_admin(db: Session, admin_email: str, admin_password: str) -> bool:
+    """Crée l'administrateur défini par l'environnement s'il n'existe pas encore (ex. base issue de la démo).
+    Un compte existant n'est jamais modifié : le mot de passe d'environnement ne sert qu'à la création."""
+    email = admin_email.lower().strip()
+    if db.scalar(select(User).where(User.email == email)):
+        return False
+    dept = db.scalar(select(Department).where(Department.name == "Informatique")) or db.scalar(select(Department))
+    db.add(User(email=email, full_name="Administrateur", role="ADMIN", department_id=dept.id,
+                password_hash=hash_password(admin_password), monthly_budget_eur=Decimal(30)))
+    db.flush()
+    audit_service.log_event(db, "ADMIN_ACTION", category="admin", details={"action": "create_initial_admin"})
+    return True
+
+
+def disable_demo_accounts(db: Session) -> int:
+    """Sécurité : si une base de démo passe en mode réel, les comptes au mot de passe public sont désactivés."""
+    users = list(db.scalars(select(User).where(User.email.like(f"%{DEMO_DOMAIN}"), User.is_active.is_(True))))
+    for u in users:
+        u.is_active = False
+    if users:
+        audit_service.log_event(db, "ADMIN_ACTION", category="admin", severity=Severity.WARNING,
+                                details={"action": "disable_demo_accounts", "count": len(users)})
+    return len(users)
+
+
 def run(reset: bool = False) -> None:
     if reset:
         with engine.begin() as conn:
@@ -322,7 +368,21 @@ def run(reset: bool = False) -> None:
         from alembic.config import Config
         command.upgrade(Config("alembic.ini"), "head")
 
+    settings = get_settings()
     with SessionLocal() as db:
+        if not settings.demo_mode:
+            if not db.scalar(select(func.count(User.id))):
+                bootstrap_production(db, settings.admin_email, settings.admin_password)
+                logger.info("Mode réel : configuration et compte administrateur créés.")
+            elif settings.admin_email:
+                _check_admin_credentials(settings.admin_email, settings.admin_password)
+                if ensure_admin(db, settings.admin_email, settings.admin_password):
+                    logger.info("Mode réel : compte administrateur créé.")
+            disabled = disable_demo_accounts(db)
+            if disabled:
+                logger.warning("Mode réel : %s compte(s) de démonstration désactivé(s).", disabled)
+            db.commit()
+            return
         if db.scalar(select(func.count(User.id))):
             logger.info("Base déjà initialisée : seed ignoré.")
             return

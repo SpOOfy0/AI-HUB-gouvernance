@@ -20,7 +20,14 @@ docker compose up --build
 Aucune clé API n'est nécessaire : en mode démo (`DEMO_MODE=true`), la génération de texte est simulée.
 La classification, le routage, les quotas, les coûts et l'audit s'exécutent réellement.
 
+## Mise en ligne gratuite
+
+Render (application) + Neon (PostgreSQL), sans carte bancaire : voir [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md).
+Pour un mode réel gratuit, une clé Gemini (Google AI Studio) suffit pour les requêtes PUBLIC.
+
 ## Documentation
+- [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md) : déploiement gratuit et mode réel
+- [SECURITY.md](SECURITY.md) : modèle de menace, limites de la DLP, RGPD
 - [docs/DECISIONS.md](docs/DECISIONS.md) : décisions d'architecture
 - [docs/NOTES-ENTRETIEN.md](docs/NOTES-ENTRETIEN.md) : questions et réponses
 - `CLAUDE.md` : contexte et commandes de développement
@@ -30,7 +37,8 @@ La classification, le routage, les quotas, les coûts et l'audit s'exécutent r�
 | Module | État |
 |---|---|
 | Socle (Docker, PostgreSQL, Alembic, auth, rôles, layout) | Fait |
-| Passerelle : DLP, classification, politique, routage, fallback, coûts, quotas | Fait, 97 tests |
+| Passerelle : DLP, classification, politique, routage, fallback, coûts, quotas | Fait, 111 tests |
+| Mode réel (clés API, administrateur initial, aucun mock) + déploiement Render | Fait |
 | Journal d'audit append-only chaîné par hash + vérification | Fait |
 | Playground avec panneau de routage | Fait |
 | Sécurité : événements, bac à sable, politique, lexique | Fait |

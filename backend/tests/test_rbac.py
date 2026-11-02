@@ -1,6 +1,5 @@
 """Contrôle des rôles côté backend (test 5)."""
 import pytest
-from fastapi.routing import APIRoute
 
 from app.main import app
 from tests.conftest import login
@@ -9,13 +8,12 @@ ADMIN_PREFIXES = ("/api/security", "/api/policy", "/api/audit", "/api/classify")
 
 
 def admin_routes() -> list[tuple[str, str]]:
-    """Découverte automatique : toute nouvelle route sous ces préfixes est testée d'office."""
+    """Découverte automatique via le schéma OpenAPI : toute nouvelle route sous ces préfixes est testée d'office."""
     routes = []
-    for route in app.routes:
-        if isinstance(route, APIRoute) and route.path.startswith(ADMIN_PREFIXES):
-            path = route.path.replace("{term_id}", "1")
-            routes += [(method, path) for method in route.methods]
-    assert len(routes) >= 9
+    for path, operations in app.openapi()["paths"].items():
+        if path.startswith(ADMIN_PREFIXES):
+            routes += [(method.upper(), path.replace("{term_id}", "1")) for method in operations]
+    assert len(routes) >= 9  # garde-fou : la découverte ne doit jamais renvoyer une liste vide
     return routes
 
 

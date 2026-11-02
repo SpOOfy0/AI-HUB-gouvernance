@@ -81,6 +81,7 @@ def test_12b_cost_not_available_when_price_missing(client, providers, db):
 
 def test_12c_real_cost_recorded_from_provider_tokens(client, providers, db):
     login(client, "USER")
-    body = chat(client, FOB).json()  # DeepSeek : 0,14 € / 0,28 € par million ; faux fournisseur : 100 / 50 tokens
+    # DeepSeek demandé en mode manuel : 0,14 € / 0,28 € par million ; faux fournisseur : 100 / 50 tokens
+    body = chat(client, FOB, model_id=model_id(db, "deepseek/deepseek-chat")).json()
     expected = (Decimal(100) * Decimal("0.14") + Decimal(50) * Decimal("0.28")) / Decimal(1_000_000)
     assert Decimal(body["routing"]["cost_eur"]) == expected.quantize(Decimal("0.000001"))

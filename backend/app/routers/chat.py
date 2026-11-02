@@ -11,7 +11,7 @@ from app.core.request_context import get_request_id
 from app.db import get_db
 from app.models import Conversation, LlmModel, Message, User
 from app.providers.base import ProviderFactory
-from app.providers.factory import api_key_for, get_provider_factory, ollama_available
+from app.providers.factory import get_provider_factory, is_model_available, ollama_available
 from app.schemas.chat import ChatIn
 from app.services import audit_service, llm_gateway
 
@@ -45,13 +45,12 @@ def available_models(user: User = Depends(get_current_user), db: Session = Depen
     for m in models:
         if user.role not in (m.allowed_roles or []):
             continue
-        if m.hosting == Hosting.PRIVATE:
-            simulated = not ollama_up
-        else:
-            simulated = settings.demo_mode or not api_key_for(m)
+        # Simulé = mode démo ET pas de vrai backend (Ollama joignable pour les modèles privés).
+        simulated = settings.demo_mode and not (m.hosting == Hosting.PRIVATE and ollama_up)
         out.append({
             "id": m.id, "display_name": m.display_name, "litellm_name": m.litellm_name, "provider": m.provider.name,
             "hosting": m.hosting, "max_classification": m.max_classification, "tier": m.tier, "simulated": simulated,
+            "available": is_model_available(m),
             "price": {"input_per_mtok": str(m.price.input_per_mtok), "output_per_mtok": str(m.price.output_per_mtok),
                       "is_demo": m.price.is_demo} if m.price else None,
         })

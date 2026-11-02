@@ -18,8 +18,8 @@ def test_01_public_request_routed_to_external_provider(client, providers):
     assert r.status_code == 200 and body["status"] == "SUCCESS"
     assert body["routing"]["classification"] == "PUBLIC"
     assert body["routing"]["decision"] == "ALLOW"
-    # Requête simple : le modèle le moins cher éligible est DeepSeek (externe, niveau max PUBLIC).
-    assert body["routing"]["model"] == "deepseek/deepseek-chat"
+    # Requête simple : le moins cher éligible est Gemini Flash (offre gratuite, externe, niveau max PUBLIC).
+    assert body["routing"]["model"] == "gemini/gemini-2.5-flash"
     assert body["routing"]["hosting"] == Hosting.EXTERNAL
     assert providers.calls[0]["hosting"] == Hosting.EXTERNAL
 
@@ -77,13 +77,13 @@ def test_03b_spec_example_short_key_is_blocked(client, providers):
 # 6. Erreur fournisseur -> fallback dans le même ensemble éligible, sinon 503 propre
 def test_06_provider_error_falls_back_within_eligible_set(client, providers):
     login(client, "USER")
-    providers.failing = {"deepseek/deepseek-chat"}
+    providers.failing = {"gemini/gemini-2.5-flash"}
     body = chat(client, FOB).json()
     assert body["status"] == "SUCCESS"
     assert body["routing"]["fallback_used"] is True
-    assert body["routing"]["attempts"] == [{"model": "deepseek/deepseek-chat", "error": "ProviderError"}]
-    assert [c["model"] for c in providers.calls][0] == "deepseek/deepseek-chat"
-    assert body["routing"]["model"] != "deepseek/deepseek-chat"
+    assert body["routing"]["attempts"] == [{"model": "gemini/gemini-2.5-flash", "error": "ProviderError"}]
+    assert [c["model"] for c in providers.calls][0] == "gemini/gemini-2.5-flash"
+    assert body["routing"]["model"] == "deepseek/deepseek-chat"  # suivant le moins cher du même ensemble
 
 
 def test_06b_all_providers_down_returns_clean_503(client, providers, db):
@@ -93,7 +93,7 @@ def test_06b_all_providers_down_returns_clean_503(client, providers, db):
 
     login(client, "USER")
     providers.failing = {c for c in [
-        "deepseek/deepseek-chat", "openai/gpt-4.1-mini", "anthropic/claude-haiku-4-5",
+        "gemini/gemini-2.5-flash", "deepseek/deepseek-chat", "openai/gpt-4.1-mini", "anthropic/claude-haiku-4-5",
         "ollama/llama3.1:8b", "ollama/qwen2.5:14b",
     ]}
     r = chat(client, FOB)
@@ -138,7 +138,7 @@ def test_internal_request_excludes_deepseek(client, providers):
     login(client, "USER")
     body = chat(client, "Résume la procédure interne d'ouverture d'un dossier export au site de Fos.").json()
     assert body["routing"]["classification"] == "INTERNAL"
-    assert body["routing"]["model"] != "deepseek/deepseek-chat"
+    assert body["routing"]["model"] not in {"deepseek/deepseek-chat", "gemini/gemini-2.5-flash"}
 
 
 def test_complex_request_uses_highest_tier_allowed_for_role(client, providers):

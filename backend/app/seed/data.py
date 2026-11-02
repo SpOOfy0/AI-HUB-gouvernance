@@ -43,12 +43,17 @@ PROVIDERS = [
     ("OpenAI", "openai", "OPENAI_API_KEY"),
     ("Anthropic", "anthropic", "ANTHROPIC_API_KEY"),
     ("DeepSeek", "deepseek", "DEEPSEEK_API_KEY"),
+    ("Google Gemini", "gemini", "GEMINI_API_KEY"),
     ("Ollama (interne)", "ollama", None),
 ]
 
 # (fournisseur, nom affiché, nom LiteLLM, hébergement, niveau max, tier, rôles, prix entrée, prix sortie)
 # Prix en € par million de tokens : FICTIFS. Prix Ollama = coût d'infrastructure interne estimé.
+# Gemini Flash (offre gratuite Google AI Studio) : niveau max PUBLIC, car les données de l'offre
+# gratuite peuvent être utilisées par Google pour améliorer ses produits.
 MODELS = [
+    ("Google Gemini", "Gemini 2.5 Flash (gratuit)", "gemini/gemini-2.5-flash", "EXTERNAL", "PUBLIC", "eco", ALL_ROLES,
+     0.0, 0.0),
     ("DeepSeek", "DeepSeek Chat", "deepseek/deepseek-chat", "EXTERNAL", "PUBLIC", "eco", ALL_ROLES, 0.14, 0.28),
     ("OpenAI", "GPT-4.1 mini", "openai/gpt-4.1-mini", "EXTERNAL", "INTERNAL", "eco", ALL_ROLES, 0.40, 1.60),
     ("OpenAI", "GPT-4.1", "openai/gpt-4.1", "EXTERNAL", "INTERNAL", "premium", PRIVILEGED, 2.00, 8.00),

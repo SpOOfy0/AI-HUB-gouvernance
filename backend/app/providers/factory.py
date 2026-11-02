@@ -39,7 +39,21 @@ def api_key_for(model: LlmModel) -> str | None:
 
 class _MissingKeyProvider:
     def complete(self, model: LlmModel, messages: list[dict]) -> ProviderResult:
-        raise ProviderError("Clé API non configurée")
+        raise ProviderError("Fournisseur non configuré (clé API absente ou Ollama injoignable)")
+
+
+def is_model_available(model: LlmModel) -> bool:
+    """Le modèle peut-il être appelé maintenant ? (différent de "éligible", qui relève de la politique)
+
+    - mode démo : toujours (les réponses sont simulées) ;
+    - modèle privé : seulement si Ollama est joignable ;
+    - modèle externe : seulement si la clé API du fournisseur est configurée.
+    """
+    if get_settings().demo_mode:
+        return True
+    if model.hosting == Hosting.PRIVATE:
+        return ollama_available()
+    return bool(api_key_for(model))
 
 
 def default_provider_factory(model: LlmModel) -> LlmProvider:
@@ -47,7 +61,8 @@ def default_provider_factory(model: LlmModel) -> LlmProvider:
     if model.hosting == Hosting.PRIVATE:
         if ollama_available():
             return LiteLLMProvider(api_base=settings.ollama_base_url, backend="ollama")
-        return MockProvider(private=True)
+        # Mock "privé" uniquement en démo : en mode réel, jamais de fausse réponse.
+        return MockProvider(private=True) if settings.demo_mode else _MissingKeyProvider()
     if settings.demo_mode:
         return MockProvider()
     key = api_key_for(model)

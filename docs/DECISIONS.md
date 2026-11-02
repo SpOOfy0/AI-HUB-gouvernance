@@ -98,3 +98,27 @@ assumée comme un choix de prototype, à réévaluer pour la production.
 
 ## D18. Gardes de rôle côté frontend = confort uniquement
 - **Décision** : `RoleGuard` et la navigation filtrée évitent d'afficher des pages inutiles, et les appels API d'une page protégée ne partent que si le rôle est autorisé. La sécurité reste dans les dépendances FastAPI (403 testés sur toutes les routes d'administration).
+
+## D19. Déploiement gratuit : un seul conteneur (API + interface statique)
+- **Contexte** : les offres gratuites (Render) donnent un service à 512 Mo qui s'endort après 15 minutes. Deux services signifieraient deux réveils à froid et une URL d'API à connaître dès le build du frontend.
+- **Décision** : `Dockerfile` racine en deux étapes. Next.js est exporté en site statique (`NEXT_OUTPUT=export`), et FastAPI le sert avec `StaticFiles`, monté après les routes `/api`. `docker compose` garde l'architecture à deux services pour le développement.
+- **Écartées** : deux services Render ; un proxy Node au démarrage.
+- **Conséquences** : même origine, donc toujours aucun CORS et un cookie httpOnly simple. Environ 230 Mo de mémoire mesurés avec LiteLLM chargé. Les pages étant toutes des composants client, l'export statique ne perd aucune fonctionnalité.
+
+## D20. Disponibilité ≠ éligibilité
+- **Contexte** : en mode réel, certains modèles n'ont pas de clé (ou Ollama est absent).
+- **Décision** : la politique calcule les modèles **éligibles** (sécurité). La fabrique de fournisseurs indique s'ils sont **disponibles** (configuration). Un modèle éligible mais non configuré est ignoré sans appel ni événement d'erreur. Si aucun modèle n'est disponible, l'utilisateur reçoit une erreur 503 `NO_CONFIGURED_PROVIDER` qui explique le niveau concerné. Hors démo, aucun mock n'est jamais utilisé.
+- **Conséquences** : une instance avec la seule clé Gemini répond aux requêtes PUBLIC et refuse proprement les autres, sans jamais affaiblir la politique pour « trouver » un modèle.
+
+## D21. Démarrage en mode réel
+- **Décision** : avec `DEMO_MODE=false`, une base vide reçoit uniquement la configuration (départements, catalogue, politique, lexique) et un administrateur défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD` (12 caractères minimum, sinon refus de démarrer). Si la base vient de la démo, les comptes `@rdt-demo.local` sont désactivés et l'administrateur est créé s'il manque.
+- **Conséquences** : impossible de déployer en production avec les mots de passe publics de la démo.
+
+## D22. Mise à jour des dépendances après audit
+- **Contexte** : `pip-audit` et `npm audit` (novembre 2026) signalaient des vulnérabilités dans les versions épinglées initialement, et LiteLLM 1.67.4 ne s'importait plus du tout (module `enterprise` manquant). Les tests ne le voyaient pas, parce qu'ils remplacent le fournisseur.
+- **Décision** : passage à LiteLLM 1.106.6, FastAPI 0.162 (Starlette corrigé), Next.js 15.5.28 et PostCSS 8.5.32 (override npm). Ajout d'un test d'intégration qui exécute un vrai appel LiteLLM vers un faux serveur local (formats OpenAI et Ollama).
+- **Conséquences** : la découverte des routes dans le test des rôles passe désormais par le schéma OpenAPI (FastAPI stocke les routeurs inclus autrement). Il reste un risque connu sur `filelock` (contrainte de LiteLLM), documenté dans SECURITY.md.
+
+## D23. Gemini (offre gratuite) plafonné à PUBLIC
+- **Décision** : ajout de Gemini 2.5 Flash au catalogue (prix 0, source « offre gratuite »). Son niveau maximal est PUBLIC, car les données de l'offre gratuite peuvent être réutilisées par Google.
+- **Conséquences** : un mode réel est possible sans dépense, et l'exemple illustre la logique de la plateforme : le niveau maximal d'un modèle découle de son contrat, pas de sa qualité.
