@@ -1,0 +1,58 @@
+# RDT AI Hub - démo complète sans aucune clé API : `docker compose up --build`
+# Ollama (optionnel) : `docker compose --profile ollama up --build`
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rdt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rdt}
+      POSTGRES_DB: ${POSTGRES_DB:-rdt_ai_hub}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rdt} -d ${POSTGRES_DB:-rdt_ai_hub}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-rdt}:${POSTGRES_PASSWORD:-rdt}@postgres:5432/${POSTGRES_DB:-rdt_ai_hub}
+      # Base dédiée aux tests (créée et vidée par pytest), jamais la base de démo.
+      TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-rdt}:${POSTGRES_PASSWORD:-rdt}@postgres:5432/rdt_test
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-0123456789abcdef}
+      DEMO_MODE: ${DEMO_MODE:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_INTERNAL_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  ollama:
+    image: ollama/ollama:0.12.3
+    profiles: ["ollama"]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+
+volumes:
+  pgdata:
+  ollama:

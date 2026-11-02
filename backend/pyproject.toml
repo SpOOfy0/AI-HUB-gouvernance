@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]  # Depends() dans les signatures : idiome FastAPI
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

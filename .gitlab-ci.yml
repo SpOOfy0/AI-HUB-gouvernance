@@ -1,0 +1,42 @@
+# CI simple : lint + tests backend + build des images.
+stages: [lint, test, build]
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+lint-backend:
+  stage: lint
+  image: python:3.12-slim
+  script:
+    - pip install ruff==0.11.8
+    - cd backend && ruff check .
+
+typecheck-frontend:
+  stage: lint
+  image: node:22-alpine
+  script:
+    - cd frontend && npm ci && npm run typecheck
+
+test-backend:
+  stage: test
+  image: python:3.12-slim
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+  variables:
+    POSTGRES_USER: rdt
+    POSTGRES_PASSWORD: rdt
+    POSTGRES_DB: rdt_ci
+    TEST_DATABASE_URL: postgresql+psycopg://rdt:rdt@postgres:5432/rdt_test
+  script:
+    - cd backend
+    - pip install -r requirements.txt -r requirements-dev.txt
+    - pytest
+
+build-images:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  script:
+    - docker build -t rdt-ai-hub-backend:$CI_COMMIT_SHORT_SHA backend
+    - docker build -t rdt-ai-hub-frontend:$CI_COMMIT_SHORT_SHA frontend

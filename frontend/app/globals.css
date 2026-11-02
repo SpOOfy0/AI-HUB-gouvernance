@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Thème sobre : fond gris très clair, cartes blanches, bordures fines, un seul accent (indigo). */
+:root {
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.21 0.01 260);
+  --card: oklch(1 0 0);
+  --muted: oklch(0.965 0.003 260);
+  --muted-foreground: oklch(0.52 0.012 260);
+  --border: oklch(0.92 0.004 260);
+  --input: oklch(0.9 0.005 260);
+  --primary: oklch(0.51 0.2 268);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.51 0.2 268 / 0.35);
+  --success: oklch(0.55 0.13 155);
+  --warning: oklch(0.68 0.15 70);
+  --danger: oklch(0.56 0.2 25);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+}

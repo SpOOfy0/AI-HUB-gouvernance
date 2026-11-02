@@ -1,0 +1,13 @@
+# Exemple de surcharge locale si un proxy d'entreprise intercepte TLS pendant le build
+# (pip / npm échouent avec "self-signed certificate in certificate chain").
+# Copier en docker-compose.override.yml (non versionné) et adapter le chemin du certificat.
+services:
+  backend:
+    build:
+      secrets: [corporate_ca]
+  frontend:
+    build:
+      secrets: [corporate_ca]
+secrets:
+  corporate_ca:
+    file: /chemin/vers/ca-entreprise.crt
