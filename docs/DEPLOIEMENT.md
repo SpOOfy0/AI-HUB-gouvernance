@@ -31,7 +31,7 @@ Ce qu'il faut savoir avant de commencer :
 
 1. Crée un compte sur https://neon.com (connexion avec GitHub possible).
 2. Crée un projet : nom `rdt-ai-hub`, version PostgreSQL 16 ou plus, région **AWS Europe (Frankfurt)**.
-3. Dans **Connect**, copie la chaîne de connexion. Désactive l'option « Connection pooling » pour obtenir l'adresse directe (sans `-pooler` dans le nom d'hôte). Elle ressemble à :
+3. Dans **Connect**, copie la chaîne de connexion. Désactive l'option « Connection pooling » pour obtenir l'adresse directe (sans `-pooler` dans le nom d'hôte). **Clique sur « Show password » avant de copier** : sinon le mot de passe copié est masqué (`****`) et la connexion échoue. La chaîne ressemble à :
    ```
    postgresql://neondb_owner:xxxxx@ep-nom-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require
    ```
@@ -90,7 +90,9 @@ Pour ajouter une autre clé plus tard (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `D
 |---|---|---|
 | Le build échoue sur `npm ci` ou `pip install` | Problème réseau passager chez Render | Manual Deploy → Clear build cache & deploy |
 | Le service ne démarre pas, log « Mode réel : définir ADMIN_EMAIL et ADMIN_PASSWORD » | Mode réel sans administrateur | Ajouter les deux variables (mot de passe ≥ 12 caractères) |
-| Erreur de connexion à la base | Mauvaise chaîne, ou adresse « pooler » | Recopier la chaîne Neon directe, avec `sslmode=require` |
+| `password authentication failed for user 'neondb_owner'` | Mot de passe masqué (`****`) copié depuis Neon | Neon → Connect → Show password, recopier ; ou Roles → Reset password. Puis Render → Environment → `DATABASE_URL` → Save, rebuild, and deploy |
+| `Network is unreachable` sur des adresses IPv6 | Render n'utilise pas IPv6 | Sans importance : la connexion se fait ensuite en IPv4 |
+| Autre erreur de connexion à la base | Mauvaise chaîne, ou adresse « pooler » | Recopier la chaîne Neon directe, avec `sslmode=require` |
 | Première visite très lente | Réveil du service gratuit | Normal (30 à 60 s) |
 | Requête PUBLIC en erreur 503 en mode réel | Clé Gemini absente, invalide ou quota dépassé | Vérifier la clé ; regarder les événements `PROVIDER_ERROR` dans le journal |
 
