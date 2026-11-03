@@ -9,7 +9,7 @@ L'interface `AuthProvider` permet de brancher plus tard un SSO OIDC
         # 2. /auth/oidc/callback échange le code contre un id_token, vérifie
         #    signature (JWKS), issuer, audience, nonce
         # 3. retrouve ou crée l'utilisateur à partir du claim email / oid,
-        #    mappe les groupes AD vers les rôles RDT (ADMIN, MANAGER...)
+        #    mappe les groupes AD vers les rôles de la plateforme (ADMIN, MANAGER...)
         # 4. émet ensuite notre propre cookie de session, comme aujourd'hui
     NON IMPLÉMENTÉ dans le prototype (voir docs/DECISIONS.md).
 """

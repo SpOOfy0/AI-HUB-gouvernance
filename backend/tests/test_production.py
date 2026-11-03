@@ -88,7 +88,7 @@ def test_production_bootstrap_refuses_weak_admin_password(real_mode, monkeypatch
 
 def test_demo_accounts_disabled_when_switching_to_real_mode(client, real_mode):
     seed_module.run()  # base de test = données de référence avec comptes de démo
-    r = client.post("/api/auth/login", json={"email": "admin@rdt-demo.local", "password": "Admin!2026"})
+    r = client.post("/api/auth/login", json={"email": "admin@aihub-demo.local", "password": "Admin!2026"})
     assert r.status_code == 401
 
 
@@ -105,4 +105,4 @@ def test_switching_demo_database_to_real_mode_creates_admin(client, real_mode, m
     seed_module.run()  # idempotent : pas de doublon au redémarrage
     r = client.post("/api/auth/login", json={"email": "dsi@exemple.fr", "password": "UnMotDePasseLong!2026"})
     assert r.status_code == 200 and r.json()["role"] == "ADMIN"
-    assert client.post("/api/auth/login", json={"email": "user@rdt-demo.local", "password": "User!2026"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "user@aihub-demo.local", "password": "User!2026"}).status_code == 401

@@ -111,7 +111,7 @@ assumée comme un choix de prototype, à réévaluer pour la production.
 - **Conséquences** : une instance avec la seule clé Gemini répond aux requêtes PUBLIC et refuse proprement les autres, sans jamais affaiblir la politique pour « trouver » un modèle.
 
 ## D21. Démarrage en mode réel
-- **Décision** : avec `DEMO_MODE=false`, une base vide reçoit uniquement la configuration (départements, catalogue, politique, lexique) et un administrateur défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD` (12 caractères minimum, sinon refus de démarrer). Si la base vient de la démo, les comptes `@rdt-demo.local` sont désactivés et l'administrateur est créé s'il manque.
+- **Décision** : avec `DEMO_MODE=false`, une base vide reçoit uniquement la configuration (départements, catalogue, politique, lexique) et un administrateur défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD` (12 caractères minimum, sinon refus de démarrer). Si la base vient de la démo, les comptes `@aihub-demo.local` sont désactivés et l'administrateur est créé s'il manque.
 - **Conséquences** : impossible de déployer en production avec les mots de passe publics de la démo.
 
 ## D22. Mise à jour des dépendances après audit
@@ -122,3 +122,8 @@ assumée comme un choix de prototype, à réévaluer pour la production.
 ## D23. Gemini (offre gratuite) plafonné à PUBLIC
 - **Décision** : ajout de Gemini 2.5 Flash au catalogue (prix 0, source « offre gratuite »). Son niveau maximal est PUBLIC, car les données de l'offre gratuite peuvent être réutilisées par Google.
 - **Conséquences** : un mode réel est possible sans dépense, et l'exemple illustre la logique de la plateforme : le niveau maximal d'un modèle découle de son contrat, pas de sa qualité.
+
+## D24. Changement de nom : AI Hub Gouvernance
+- **Décision** : la plateforme s'appelle « AI HUB GOUVERNANCE » (interface, API, documentation). Les comptes de démo passent à `@aihub-demo.local`. Le format fictif de dossier interne devient `DOS-AAAA-NNNNN`.
+- **Données existantes** : la migration Alembic `0002` renomme les comptes et le terme du lexique dans les bases déjà déployées, sans réinitialisation. Le journal d'audit n'est pas modifié : il est en ajout seul, et l'historique garde son état d'origine (la chaîne de hash reste valide).
+- **Non renommés** (invisibles pour l'utilisateur) : le nom du service Render `rdt-ai-hub` (le changer créerait un nouveau service et une nouvelle URL), les identifiants de la base PostgreSQL locale de `docker compose`, le nom du dossier.

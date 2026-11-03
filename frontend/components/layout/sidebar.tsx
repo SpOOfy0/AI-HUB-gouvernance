@@ -15,10 +15,10 @@ export function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col border-r bg-card">
       <div className="flex h-14 items-center gap-2.5 border-b px-4">
         <div className="flex size-7 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
-          RDT
+          AI
         </div>
         <div className="leading-tight">
-          <div className="text-[13px] font-semibold tracking-tight">RDT AI HUB</div>
+          <div className="text-[13px] font-semibold tracking-tight">AI HUB GOUVERNANCE</div>
           <div className="text-[10px] text-muted-foreground">Enterprise AI Governance Platform</div>
         </div>
       </div>

@@ -7,7 +7,7 @@ from tests.conftest import login
 
 
 def test_login_sets_httponly_cookie_and_me_works(client):
-    r = client.post("/api/auth/login", json={"email": "user@rdt-demo.local", "password": "User!2026"})
+    r = client.post("/api/auth/login", json={"email": "user@aihub-demo.local", "password": "User!2026"})
     assert r.status_code == 200
     cookie = r.headers["set-cookie"]
     assert "HttpOnly" in cookie and "SameSite=lax" in cookie
@@ -16,7 +16,7 @@ def test_login_sets_httponly_cookie_and_me_works(client):
 
 
 def test_wrong_password_is_rejected_and_logged_without_password(client, db):
-    r = client.post("/api/auth/login", json={"email": "user@rdt-demo.local", "password": "mauvais-mdp-123"})
+    r = client.post("/api/auth/login", json={"email": "user@aihub-demo.local", "password": "mauvais-mdp-123"})
     assert r.status_code == 401
     event = db.scalar(select(AuditEvent).where(AuditEvent.event_type == "LOGIN_FAILED"))
     assert event is not None and "mauvais-mdp-123" not in str(event.details)

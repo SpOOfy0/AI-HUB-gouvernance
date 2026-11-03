@@ -128,7 +128,7 @@ def _extra_users(db: Session, rng: random.Random) -> None:
             dept, role, budget = by_name["Informatique"], "DEVELOPER", 15
         else:
             dept, role, budget = rng.choice(depts), "USER", rng.choice([4, 5, 5, 6, 8])
-        email = f"{first.lower()}.{last.lower()}@rdt-demo.local".translate(str.maketrans("éèëïî", "eeeii"))
+        email = f"{first.lower()}.{last.lower()}@aihub-demo.local".translate(str.maketrans("éèëïî", "eeeii"))
         db.add(User(email=email, full_name=f"{first} {last}", password_hash=pw, role=role, department_id=dept.id,
                     monthly_budget_eur=Decimal(budget)))
     db.flush()
@@ -141,7 +141,7 @@ def _ts(rng: random.Random, day: datetime) -> datetime:
 
 def seed_activity(db: Session, rng: random.Random, now: datetime) -> None:
     _extra_users(db, rng)
-    users = list(db.scalars(select(User).where(User.email != "quota@rdt-demo.local")))
+    users = list(db.scalars(select(User).where(User.email != "quota@aihub-demo.local")))
     models = list(db.scalars(select(LlmModel)).unique())
     weights = {u.id: rng.uniform(0.3, 2.0) for u in users}
 
@@ -216,7 +216,7 @@ def seed_activity(db: Session, rng: random.Random, now: datetime) -> None:
     for _ in range(7):
         ts = _ts(rng, rng.choice(days))
         events.append((min(ts, now), dict(event_type="LOGIN_FAILED", category="security", severity=Severity.WARNING,
-                                          status="FAILED", details={"email_domain": "rdt-demo.local",
+                                          status="FAILED", details={"email_domain": "aihub-demo.local",
                                                                     "ip": f"10.0.1.{rng.randint(2, 250)}"})))
     for _ in range(4):
         ts = _ts(rng, rng.choice(days))
@@ -272,7 +272,7 @@ def _fill_month(db: Session, rng: random.Random, user: User, model: LlmModel, ta
 
 def _quota_scenarios(db: Session, rng: random.Random, now: datetime, models: list[LlmModel], events: list) -> None:
     haiku = next(m for m in models if m.litellm_name == "anthropic/claude-haiku-4-5")
-    scenarios = [("user@rdt-demo.local", Decimal("0.91")), ("quota@rdt-demo.local", Decimal("1.00"))]
+    scenarios = [("user@aihub-demo.local", Decimal("0.91")), ("quota@aihub-demo.local", Decimal("1.00"))]
     # Trois utilisateurs pilotes (non démo) proches de leur quota.
     others = [u for u in db.scalars(select(User).where(User.role == "USER").order_by(User.id))
               if u.email not in {a["email"] for a in data.DEMO_ACCOUNTS}][:3]
@@ -297,7 +297,7 @@ def _quota_scenarios(db: Session, rng: random.Random, now: datetime, models: lis
 
 def _sample_conversations(db: Session, now: datetime) -> None:
     """Deux conversations d'exemple pour le compte utilisateur démo (contenu fictif et PUBLIC)."""
-    user = db.scalar(select(User).where(User.email == "user@rdt-demo.local"))
+    user = db.scalar(select(User).where(User.email == "user@aihub-demo.local"))
     samples = [
         ("Différence FOB / CIF", "Explique-moi la différence entre FOB et CIF.",
          "[Réponse simulée] En FOB, le risque est transféré quand la marchandise est à bord ; en CIF, le vendeur "
@@ -318,7 +318,7 @@ def _sample_conversations(db: Session, now: datetime) -> None:
     db.flush()
 
 
-DEMO_DOMAIN = "@rdt-demo.local"
+DEMO_DOMAIN = "@aihub-demo.local"
 
 
 def bootstrap_production(db: Session, admin_email: str, admin_password: str) -> None:

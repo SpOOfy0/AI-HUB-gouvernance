@@ -1,4 +1,4 @@
-# Déployer RDT AI Hub gratuitement (Render + Neon)
+# Déployer AI Hub Gouvernance gratuitement (Render + Neon)
 
 Ce guide met l'application en ligne sur une adresse publique en HTTPS, **sans carte bancaire**.
 
@@ -50,7 +50,7 @@ L'application tourne alors en **mode démo** : les comptes de démonstration son
 ## Étape 4 (optionnelle) : passer en mode réel avec une clé gratuite
 
 1. **Clé Gemini gratuite** : sur https://aistudio.google.com, choisis « Get API key » puis « Create API key ».
-2. **Nouvelle base propre** : dans Neon, crée une seconde base (par exemple `rdt_prod`) et copie sa chaîne de connexion. Ce n'est pas obligatoire : si tu gardes la base de démo, les comptes de démo sont désactivés automatiquement, mais l'historique fictif reste visible.
+2. **Nouvelle base propre** : dans Neon, crée une seconde base (par exemple `aihub_prod`) et copie sa chaîne de connexion. Ce n'est pas obligatoire : si tu gardes la base de démo, les comptes de démo sont désactivés automatiquement, mais l'historique fictif reste visible.
 3. Dans Render, ouvre le service, puis **Environment**, et modifie ou ajoute :
 
    | Variable | Valeur |

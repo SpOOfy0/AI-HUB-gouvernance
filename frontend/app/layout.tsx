@@ -4,7 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RDT AI Hub",
+  title: "AI Hub Gouvernance",
   description: "Enterprise AI Governance Platform",
 };
 

@@ -23,7 +23,7 @@ def _consume(db, email: str, cost: str) -> User:
 
 # 4. Un utilisateur ne peut pas dépasser son quota
 def test_04_user_cannot_exceed_quota(client, providers, db):
-    _consume(db, "user@rdt-demo.local", "3.00")  # budget du compte démo : 3 €
+    _consume(db, "user@aihub-demo.local", "3.00")  # budget du compte démo : 3 €
     login(client, "USER")
     r = chat(client, FOB)
     assert r.status_code == 429
@@ -34,14 +34,14 @@ def test_04_user_cannot_exceed_quota(client, providers, db):
 
 def test_04b_request_refused_if_estimate_would_exceed_quota(client, providers, db):
     # 2,999 € consommés sur 3 € : l'estimation pessimiste (~0,004 €) ferait dépasser -> refus.
-    _consume(db, "user@rdt-demo.local", "2.999")
+    _consume(db, "user@aihub-demo.local", "2.999")
     login(client, "USER")
     assert chat(client, FOB).status_code == 429
     assert providers.calls == []
 
 
 def test_04c_department_budget_is_enforced(client, providers, db):
-    user = db.scalar(select(User).where(User.email == "user@rdt-demo.local"))
+    user = db.scalar(select(User).where(User.email == "user@aihub-demo.local"))
     db.get(Department, user.department_id).monthly_budget_eur = Decimal("0.001")
     db.commit()
     login(client, "USER")
@@ -50,7 +50,7 @@ def test_04c_department_budget_is_enforced(client, providers, db):
 
 
 def test_04d_threshold_alerts_raised_once(client, providers, db):
-    _consume(db, "user@rdt-demo.local", "2.73")  # 91 % de 3 €
+    _consume(db, "user@aihub-demo.local", "2.73")  # 91 % de 3 €
     login(client, "USER")
     first = chat(client, FOB).json()
     assert {a["threshold"] for a in first["alerts"] if a["scope"] == "user"} == {70, 90}

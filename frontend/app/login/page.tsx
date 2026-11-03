@@ -40,9 +40,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center">
           <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-            RDT
+            AI
           </div>
-          <h1 className="text-lg font-semibold tracking-tight">RDT AI HUB</h1>
+          <h1 className="text-lg font-semibold tracking-tight">AI HUB GOUVERNANCE</h1>
           <p className="text-xs text-muted-foreground">Enterprise AI Governance Platform</p>
         </div>
 

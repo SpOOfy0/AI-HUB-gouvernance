@@ -1,4 +1,4 @@
-# RDT AI Hub - démo complète sans aucune clé API : `docker compose up --build`
+# AI Hub Gouvernance - démo complète sans aucune clé API : `docker compose up --build`
 # Ollama (optionnel) : `docker compose --profile ollama up --build`
 
 services:

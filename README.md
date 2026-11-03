@@ -1,4 +1,4 @@
-# RDT AI Hub
+# AI Hub Gouvernance
 
 **Enterprise AI Governance Platform** : passerelle centralisée de gouvernance, de sécurité et de routage
 des modèles d'IA pour la DSI d'un groupe de transit et de logistique internationale (prototype).

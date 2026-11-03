@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-env"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 480  # une journée de travail
-    cookie_name: str = "rdt_session"
+    cookie_name: str = "aihub_session"
     cookie_secure: bool = True  # Secure : cookie envoyé uniquement en HTTPS (localhost toléré par Chrome/Firefox)
 
     # --- Mode démo ---

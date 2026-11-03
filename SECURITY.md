@@ -1,4 +1,4 @@
-# Sécurité : RDT AI Hub (prototype)
+# Sécurité : AI Hub Gouvernance (prototype)
 
 ## Modèle de menace (simplifié)
 

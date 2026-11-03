@@ -147,7 +147,7 @@ export default function PlaygroundPage() {
       setMessages((prev) => [...prev, { kind: "error", key: nextKey(), text: e.message, requestId: e.requestId }]);
     } finally {
       setSending(false);
-      window.dispatchEvent(new Event("rdt:usage-changed"));
+      window.dispatchEvent(new Event("aihub:usage-changed"));
     }
   }
 

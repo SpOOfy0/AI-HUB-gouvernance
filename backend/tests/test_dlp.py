@@ -71,7 +71,7 @@ def test_13_personal_data_detected(text, dtype):
     ("Prépare la cotation client pour NordAgro", Level.CONFIDENTIAL),
     ("Le CONTRAT CADRE avec Groupe Valmer arrive à échéance", Level.CONFIDENTIAL),
     ("Quelle marge sur ce dossier ?", Level.CONFIDENTIAL),
-    ("Statut du dossier RDT-2026-00142 ?", Level.INTERNAL),
+    ("Statut du dossier DOS-2026-00142 ?", Level.INTERNAL),
     ("Horaires de l'entrepôt de Roissy", Level.INTERNAL),
     ("Tarifs negocies sans accents", Level.CONFIDENTIAL),  # insensible aux accents et à la casse
 ])

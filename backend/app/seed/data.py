@@ -18,15 +18,15 @@ DEPARTMENTS = [
 ]
 
 DEMO_ACCOUNTS = [
-    {"email": "admin@rdt-demo.local", "password": "Admin!2026", "role": "ADMIN", "full_name": "Claire Admin",
+    {"email": "admin@aihub-demo.local", "password": "Admin!2026", "role": "ADMIN", "full_name": "Claire Admin",
      "department": "Informatique", "budget": 30, "label": "Administrateur DSI"},
-    {"email": "manager@rdt-demo.local", "password": "Manager!2026", "role": "MANAGER", "full_name": "Marc Manager",
+    {"email": "manager@aihub-demo.local", "password": "Manager!2026", "role": "MANAGER", "full_name": "Marc Manager",
      "department": "Transport maritime", "budget": 15, "label": "Manager Transport maritime"},
-    {"email": "dev@rdt-demo.local", "password": "Dev!2026", "role": "DEVELOPER", "full_name": "Dina Développeuse",
+    {"email": "dev@aihub-demo.local", "password": "Dev!2026", "role": "DEVELOPER", "full_name": "Dina Développeuse",
      "department": "Informatique", "budget": 15, "label": "Développeuse"},
-    {"email": "user@rdt-demo.local", "password": "User!2026", "role": "USER", "full_name": "Ulysse Utilisateur",
+    {"email": "user@aihub-demo.local", "password": "User!2026", "role": "USER", "full_name": "Ulysse Utilisateur",
      "department": "Douane", "budget": 3, "label": "Utilisateur Douane (quota à 91 %)"},
-    {"email": "quota@rdt-demo.local", "password": "Quota!2026", "role": "USER", "full_name": "Quentin Quota",
+    {"email": "quota@aihub-demo.local", "password": "Quota!2026", "role": "USER", "full_name": "Quentin Quota",
      "department": "Logistique", "budget": 2, "label": "Utilisateur Logistique (quota atteint)"},
 ]
 
@@ -84,6 +84,6 @@ LEXICON = [
     ("note interne", "procedure", "INTERNAL", False),
     (r"\b(site|agence|entrepot|plateforme)s? (de |d'|du )?(fos|roissy|le havre|lyon|marseille|lille|strasbourg|rungis)\b",
      "site", "INTERNAL", True),
-    (r"\brdt-\d{4}-\d{5}\b", "internal_id", "INTERNAL", True),   # numéro de dossier interne
+    (r"\bdos-\d{4}-\d{5}\b", "internal_id", "INTERNAL", True),   # numéro de dossier interne
     (r"\bcli-\d{5}\b", "internal_id", "INTERNAL", True),          # code client interne
 ]

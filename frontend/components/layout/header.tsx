@@ -37,8 +37,8 @@ export function Header() {
     const load = () => api<UsageInfo>("/me/usage").then(setUsage).catch(() => undefined);
     load();
     // Rafraîchi quand le playground signale une nouvelle requête (consommation modifiée).
-    window.addEventListener("rdt:usage-changed", load);
-    return () => window.removeEventListener("rdt:usage-changed", load);
+    window.addEventListener("aihub:usage-changed", load);
+    return () => window.removeEventListener("aihub:usage-changed", load);
   }, []);
 
   if (!user) return null;

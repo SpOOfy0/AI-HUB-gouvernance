@@ -1,7 +1,7 @@
 # CLAUDE.md : contexte pour les sessions de travail
 
 ## Projet
-RDT AI Hub : prototype de **passerelle de gouvernance IA** pour la DSI d'un groupe de transit
+AI Hub Gouvernance : prototype de **passerelle de gouvernance IA** pour la DSI d'un groupe de transit
 (~700 personnes). Ce n'est pas un chatbot : la passerelle classifie chaque requête (DLP),
 applique une politique de routage selon la confidentialité, appelle le modèle (via LiteLLM
 en bibliothèque, ou un mock en démo), gère quotas/coûts et journalise tout (audit chaîné).

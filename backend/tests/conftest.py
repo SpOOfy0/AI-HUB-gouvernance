@@ -35,7 +35,7 @@ from app.seed.data import DEMO_ACCOUNTS  # noqa: E402
 from app.seed.seed import seed_reference  # noqa: E402
 
 get_settings.cache_clear()
-PASSWORDS = {a["role"]: (a["email"], a["password"]) for a in DEMO_ACCOUNTS if a["email"] != "quota@rdt-demo.local"}
+PASSWORDS = {a["role"]: (a["email"], a["password"]) for a in DEMO_ACCOUNTS if a["email"] != "quota@aihub-demo.local"}
 TABLES = ["audit_events", "quota_alerts", "llm_requests", "messages", "conversations", "model_prices", "models",
           "providers", "dlp_lexicon_terms", "policy_settings", "users", "departments"]
 
